@@ -1,24 +1,14 @@
-export const mazeValues = [
-  0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0,
-  1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1,
-  0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0,
-  1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1,
-  1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-];
-
-export const mazeWidth = 16;
-export const mazeHeight = 16;
-/////////
-
-import { Application, Sprite, Texture, Graphics, Container, Rectangle } from 'pixi.js';
-
-const app = new Application();
+import { Application, Sprite, Texture } from 'pixi.js';
+import { generateMaze } from './src/maze';
+import { canMoveTo } from './src/utils';
 
 (async function () {
+  // Init app
+  const app = new Application();
   await app.init({ background: 'lightgrey', height: 600, width: 600 });
-
   document.body.appendChild(app.canvas);
 
+  // Define tile size
   const tileSize = 20;
 
   // Create player sprite
@@ -30,29 +20,8 @@ const app = new Application();
   player.tint = 0xff0000;
   app.stage.addChild(player);
 
-  // Initial tile
-  app.stage.addChild(new Graphics().rect(0, 0, tileSize, tileSize).fill(0x000000));
-
-  // Create maze from array
-  const mazeContainer = new Container();
-  for (let row = 0; row < mazeHeight; row++) {
-    // Add left wall
-    const leftWallTile = new Graphics().rect(0, row * tileSize + tileSize, tileSize, tileSize).fill(0x000000);
-    mazeContainer.addChild(leftWallTile);
-
-    for (let col = 0; col < mazeWidth; col++) {
-      // Add top wall
-      const topWallTile = new Graphics().rect(col * tileSize + tileSize, 0, tileSize, tileSize).fill(0x000000);
-      mazeContainer.addChild(topWallTile);
-
-      // Add maze tiles
-      const tile = mazeValues[row * mazeWidth + col];
-      if (tile === 1) {
-        const mazeTile = new Graphics().rect(col * tileSize + tileSize, row * tileSize + tileSize, tileSize, tileSize).fill(0x000000);
-        mazeContainer.addChild(mazeTile);
-      }
-    }
-  }
+  // Create maze
+  const mazeContainer = generateMaze(tileSize);
   app.stage.addChild(mazeContainer);
 
   // Create an object to store the state of arrow keys
@@ -62,8 +31,8 @@ const app = new Application();
   window.addEventListener('keydown', (e) => (keys[e.code] = true));
   window.addEventListener('keyup', (e) => (keys[e.code] = false));
 
-  // Update function to move the sprite based on key presses and handle collision
-  function gameLoop() {
+  // Create game loop
+  app.ticker.add(() => {
     const speed = 1;
     let newX = player.x;
     let newY = player.y;
@@ -77,36 +46,7 @@ const app = new Application();
     if (newX === player.x && newY === player.y) return;
 
     // Attempt horizontal movement first, then vertical movement
-    if (canMoveTo(newX, player.y)) player.x = newX;
-    if (canMoveTo(player.x, newY)) player.y = newY;
-  }
-
-  // Add the function to the game loop
-  app.ticker.add(gameLoop);
-
-  // ---- Util Functions ------
-
-  // Function to check potential collisions with maze walls
-  function canMoveTo(newX, newY) {
-    const potentialBounds = new Rectangle(newX, newY, player.width, player.height);
-    for (const child of mazeContainer.children) {
-      if (child === player) continue;
-      if (checkCollision(potentialBounds, child)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  // Check for collision between two rectangles
-  function checkCollision(r1, r2) {
-    const bounds1 = r1.getBounds();
-    const bounds2 = r2.getBounds();
-    return (
-      bounds1.x < bounds2.x + bounds2.width &&
-      bounds1.y < bounds2.y + bounds2.height &&
-      bounds2.x < bounds1.x + bounds1.width &&
-      bounds2.y < bounds1.y + bounds1.height
-    );
-  }
+    if (canMoveTo(newX, player.y, player, mazeContainer)) player.x = newX;
+    if (canMoveTo(player.x, newY, player, mazeContainer)) player.y = newY;
+  });
 })();
