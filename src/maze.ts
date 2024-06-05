@@ -1,40 +1,46 @@
 import { Graphics, Container } from 'pixi.js';
 
-export const mazeValues = [
-  0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0,
-  1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1,
-  0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0,
-  1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1,
-  1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-];
-
-export const mazeWidth = 16;
-export const mazeHeight = 16;
-
 /** Create maze from array */
-export function generateMaze(tileSize: number) {
+export function generateMaze(tileSize: number): [Container, number[][]] {
+  const mazeWidth = 17;
+  const mazeHeight = 17;
+  const mazeValues: number[][] = generateMazeArray(mazeHeight, mazeWidth);
+
+  // Draw maze
   const mazeContainer = new Container();
-
-  // Initial tile
-  mazeContainer.addChild(new Graphics().rect(0, 0, tileSize, tileSize).fill(0x000000));
-
   for (let row = 0; row < mazeHeight; row++) {
-    // Add left wall
-    const leftWallTile = new Graphics().rect(0, row * tileSize + tileSize, tileSize, tileSize).fill(0x000000);
-    mazeContainer.addChild(leftWallTile);
-
     for (let col = 0; col < mazeWidth; col++) {
-      // Add top wall
-      const topWallTile = new Graphics().rect(col * tileSize + tileSize, 0, tileSize, tileSize).fill(0x000000);
-      mazeContainer.addChild(topWallTile);
-
-      // Add maze tiles
-      const tile = mazeValues[row * mazeWidth + col];
-      if (tile === 1) {
-        const mazeTile = new Graphics().rect(col * tileSize + tileSize, row * tileSize + tileSize, tileSize, tileSize).fill(0x000000);
+      if (mazeValues[row][col] === 1) {
+        const mazeTile = new Graphics().rect(col * tileSize, row * tileSize, tileSize, tileSize).fill('black');
         mazeContainer.addChild(mazeTile);
       }
     }
   }
-  return mazeContainer;
+  return [mazeContainer, mazeValues];
+}
+
+function generateMazeArray(mazeHeight: number, mazeWidth: number) {
+  // Will be randomly generated
+  const generatedValues = [
+    0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0,
+    0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1,
+    0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0,
+    1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1,
+    1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0,
+    1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  ];
+
+  // Transform to 2D array, and add in top and lefthand walls
+  const mazeValues: number[][] = [];
+  for (let row = 0; row < mazeHeight - 1; row++) {
+    mazeValues.push([1]);
+    for (let col = 0; col < mazeWidth - 1; col++) {
+      const tile = generatedValues[row * (mazeWidth - 1) + col];
+      mazeValues[row].push(tile);
+    }
+  }
+  mazeValues.unshift([...Array(mazeWidth + 1).keys()].map(() => 1));
+
+  return mazeValues;
 }

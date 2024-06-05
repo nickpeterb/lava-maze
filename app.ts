@@ -1,34 +1,51 @@
 import { Application, Sprite, Texture } from 'pixi.js';
 import { generateMaze } from './src/maze';
 import { canMoveTo } from './src/utils';
+import { lavaContainer, lavaTickerFactory } from './src/lava';
 
-(async function () {
+async function main() {
   // Init app
   const app = new Application();
   await app.init({ background: 'lightgrey', height: 600, width: 600 });
   document.body.appendChild(app.canvas);
 
-  // Define tile size
+  // Define constants
   const tileSize = 20;
+  const startPosition = { x: tileSize, y: tileSize };
 
   // Create player sprite
   const player = new Sprite(Texture.WHITE);
   player.width = tileSize;
   player.height = tileSize;
-  player.x = tileSize;
-  player.y = tileSize;
-  player.tint = 0xff0000;
+  player.x = startPosition.x;
+  player.y = startPosition.y;
+  player.tint = '#2196F3';
   app.stage.addChild(player);
 
   // Create maze
-  const mazeContainer = generateMaze(tileSize);
+  const [mazeContainer, mazeValues] = generateMaze(tileSize);
   app.stage.addChild(mazeContainer);
+
+  // Create empty lava container
+  app.stage.addChild(lavaContainer);
 
   // Create an object to store the state of arrow keys
   const keys = {};
 
+  let gameStarted = false;
+
   // Add event listeners for keydown and keyup events
-  window.addEventListener('keydown', (e) => (keys[e.code] = true));
+  window.addEventListener('keydown', (e) => {
+    keys[e.code] = true;
+
+    // Start lava
+    if (!gameStarted) {
+      gameStarted = true;
+      setTimeout(() => {
+        app.ticker.add(lavaTickerFactory({ row: 1, col: 1 }, tileSize, mazeValues, player));
+      }, 250);
+    }
+  });
   window.addEventListener('keyup', (e) => (keys[e.code] = false));
 
   // Create game loop
@@ -49,4 +66,8 @@ import { canMoveTo } from './src/utils';
     if (canMoveTo(newX, player.y, player, mazeContainer)) player.x = newX;
     if (canMoveTo(player.x, newY, player, mazeContainer)) player.y = newY;
   });
-})();
+}
+
+window.onload = function () {
+  main();
+};
