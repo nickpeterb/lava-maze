@@ -1,29 +1,29 @@
 import { Application, Sprite, Texture } from 'pixi.js';
-import { generateMaze } from './src/maze';
+import { createMaze } from './src/maze';
 import { canMoveTo } from './src/utils';
 import { lavaContainer, lavaTickerFactory } from './src/lava';
+import { LAVA_START_DELAY, TILE_SIZE } from './src/constants';
 
 async function main() {
   // Init app
   const app = new Application();
-  await app.init({ background: 'lightgrey', height: 600, width: 600 });
+  await app.init({ background: 'lightgrey', height: window.innerHeight - 5, width: window.innerWidth - 5 });
+  document.body.innerHTML = '';
   document.body.appendChild(app.canvas);
 
-  // Define constants
-  const tileSize = 20;
-  const startPosition = { x: tileSize, y: tileSize };
+  const startPosition = { row: 1, col: 1, x: TILE_SIZE, y: TILE_SIZE } as const;
 
   // Create player sprite
   const player = new Sprite(Texture.WHITE);
-  player.width = tileSize;
-  player.height = tileSize;
+  player.width = TILE_SIZE;
+  player.height = TILE_SIZE;
   player.x = startPosition.x;
   player.y = startPosition.y;
   player.tint = '#2196F3';
   app.stage.addChild(player);
 
   // Create maze
-  const [mazeContainer, mazeValues] = generateMaze(tileSize);
+  const [mazeContainer, mazeValues] = createMaze(TILE_SIZE);
   app.stage.addChild(mazeContainer);
 
   // Create empty lava container
@@ -42,8 +42,8 @@ async function main() {
     if (!gameStarted) {
       gameStarted = true;
       setTimeout(() => {
-        app.ticker.add(lavaTickerFactory({ row: 1, col: 1 }, tileSize, mazeValues, player));
-      }, 250);
+        app.ticker.add(lavaTickerFactory(startPosition, TILE_SIZE, mazeValues, player));
+      }, LAVA_START_DELAY);
     }
   });
   window.addEventListener('keyup', (e) => (keys[e.code] = false));

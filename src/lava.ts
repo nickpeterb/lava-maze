@@ -1,5 +1,6 @@
 import { Container, Graphics, Sprite, Ticker } from 'pixi.js';
 import { checkCollision } from './utils';
+import { FLOOR_TILE, LAVA_SPEED, LAVA_TILE } from './constants';
 
 export const lavaContainer = new Container();
 
@@ -11,7 +12,7 @@ export function lavaTickerFactory(
 ) {
   mazeValues = JSON.parse(JSON.stringify(mazeValues));
 
-  const waitTimeMS = 175;
+  const waitTimeMS = LAVA_SPEED;
   let elapsedMS = 0;
 
   // Array of lava tiles
@@ -32,11 +33,11 @@ export function lavaTickerFactory(
       // For each neighbor
       for (const neighbor of neighbors) {
         // If empty tile
-        if (mazeValues[neighbor.row][neighbor.col] === 0) {
+        if (mazeValues[neighbor.row][neighbor.col] === FLOOR_TILE) {
           allFull = false;
 
           // Set as lava tile
-          mazeValues[neighbor.row][neighbor.col] = 2;
+          mazeValues[neighbor.row][neighbor.col] = LAVA_TILE;
           newTiles.push(neighbor);
           const newLavaTile = new Graphics()
             .rect(neighbor.col * tileSize, neighbor.row * tileSize, tileSize, tileSize)
