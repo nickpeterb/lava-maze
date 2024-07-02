@@ -1,20 +1,17 @@
 import { Container, Graphics, Sprite, Ticker } from 'pixi.js';
-import { checkCollision } from './utils';
-import { FLOOR_TILE, LAVA_SPEED, LAVA_TILE } from './constants';
+import { checkCollision, createTile } from './utils';
+import { FLOOR_TILE, LAVA_SPEED_DELAY, LAVA_TILE } from './constants';
 import { PlayerSettings, Tile } from './types';
 
 export const lavaContainer = new Container();
 
 export function lavaTickerFactory(
   startIndexes: Tile,
-  tileSize: number,
   mazeValues: number[][],
   player: Sprite,
   playerSettings: PlayerSettings
 ) {
   mazeValues = JSON.parse(JSON.stringify(mazeValues));
-
-  const waitTimeMS = LAVA_SPEED;
   let elapsedMS = 0;
 
   // Array of upcoming lava tiles
@@ -23,7 +20,7 @@ export function lavaTickerFactory(
   return function lavaTicker(ticker: Ticker) {
     // Delay execution
     elapsedMS += ticker.deltaMS;
-    if (elapsedMS < waitTimeMS) return;
+    if (elapsedMS < LAVA_SPEED_DELAY) return;
     elapsedMS = 0;
 
     const nextTiles: Tile[] = [];
@@ -31,7 +28,7 @@ export function lavaTickerFactory(
     for (const tile of lavaTiles) {
       // Turn to lava
       mazeValues[tile.row][tile.col] = LAVA_TILE;
-      const newLavaTile = new Graphics().rect(tile.col * tileSize, tile.row * tileSize, tileSize, tileSize).fill('red');
+      const newLavaTile = createTile(tile.row, tile.col, 'red');
       lavaContainer.addChild(newLavaTile);
 
       // Add to next round of lavaTiles

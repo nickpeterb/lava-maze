@@ -1,4 +1,5 @@
-import { Container, Rectangle, Sprite } from 'pixi.js';
+import { Container, Graphics, Rectangle, Sprite } from 'pixi.js';
+import { TILE_SIZE } from './constants';
 
 /** Checks for potential collisions with maze walls */
 export function canMoveTo(newX: number, newY: number, player: Sprite, maze: Container) {
@@ -22,4 +23,8 @@ export function checkCollision(r1, r2) {
     bounds2.x < bounds1.x + bounds1.width &&
     bounds2.y < bounds1.y + bounds1.height
   );
+}
+
+export function createTile(row: number, col: number, color: string) {
+  return new Graphics().rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE).fill(color);
 }

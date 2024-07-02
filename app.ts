@@ -1,9 +1,10 @@
 import { Application, Sprite, Texture } from 'pixi.js';
 import { createMaze } from './src/maze';
-import { canMoveTo } from './src/utils';
+import { canMoveTo, checkCollision, createTile } from './src/utils';
 import { lavaContainer, lavaTickerFactory } from './src/lava';
-import { LAVA_START_DELAY, TILE_SIZE } from './src/constants';
+import { GOAL_TILE, LAVA_START_DELAY, TILE_SIZE } from './src/constants';
 import { PlayerSettings } from './src/types';
+import { getGoalTilePosition } from './src/goal';
 
 async function main() {
   // Init app
@@ -30,6 +31,12 @@ async function main() {
   const [mazeContainer, mazeValues] = createMaze(TILE_SIZE);
   app.stage.addChild(mazeContainer);
 
+  // Create goal tile
+  const goal = getGoalTilePosition(mazeValues);
+  // mazeValues[goal.row][goal.col] = GOAL_TILE; // if this is needed, change logic in lava alg. to be if tile is floor or goal
+  const goalTile = createTile(goal.row, goal.col, 'green');
+  app.stage.addChild(goalTile);
+
   // Create empty lava container
   app.stage.addChild(lavaContainer);
 
@@ -46,17 +53,22 @@ async function main() {
     if (!gameStarted) {
       gameStarted = true;
       setTimeout(() => {
-        app.ticker.add(lavaTickerFactory(startPosition, TILE_SIZE, mazeValues, player, playerSettings));
+        app.ticker.add(lavaTickerFactory(startPosition, mazeValues, player, playerSettings));
       }, LAVA_START_DELAY);
     }
   });
   window.addEventListener('keyup', (e) => (keys[e.code] = false));
 
   // Create game loop
-  app.ticker.add(() => {
+  app.ticker.add((ticker) => {
     const speed = 1;
     let newX = player.x;
     let newY = player.y;
+
+    if (checkCollision(player, goalTile)) {
+      ticker.stop();
+      console.warn('You win!');
+    }
 
     if (playerSettings.canMove) {
       if (keys['ArrowUp'] || keys['KeyW']) newY -= speed;
