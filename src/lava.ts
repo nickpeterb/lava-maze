@@ -2,21 +2,21 @@ import { Container, Graphics, Sprite, Ticker } from 'pixi.js';
 import { checkCollision } from './utils';
 import { FLOOR_TILE, LAVA_SPEED, LAVA_TILE } from './constants';
 
+interface Tile {
+  row: number;
+  col: number;
+}
+
 export const lavaContainer = new Container();
 
-export function lavaTickerFactory(
-  startIndexes: { row: number; col: number },
-  tileSize: number,
-  mazeValues: number[][],
-  player: Sprite
-) {
+export function lavaTickerFactory(startIndexes: Tile, tileSize: number, mazeValues: number[][], player: Sprite) {
   mazeValues = JSON.parse(JSON.stringify(mazeValues));
 
   const waitTimeMS = LAVA_SPEED;
   let elapsedMS = 0;
 
-  // Array of lava tiles
-  const lavaTiles: { row: number; col: number }[] = [{ ...startIndexes }];
+  // Array of upcoming lava tiles
+  let lavaTiles: Tile[] = [{ ...startIndexes }];
 
   return function lavaTicker(ticker: Ticker) {
     // Delay execution
@@ -24,41 +24,33 @@ export function lavaTickerFactory(
     if (elapsedMS < waitTimeMS) return;
     elapsedMS = 0;
 
-    // New lava tiles
-    const newTiles: { row: number; col: number }[] = [];
-    let allFull = true; // Stop flag
-    // For each current lava tile
+    const nextTiles: Tile[] = [];
+
     for (const tile of lavaTiles) {
+      // Turn to lava
+      mazeValues[tile.row][tile.col] = LAVA_TILE;
+      const newLavaTile = new Graphics().rect(tile.col * tileSize, tile.row * tileSize, tileSize, tileSize).fill('red');
+      lavaContainer.addChild(newLavaTile);
+
+      // Add to next round of lavaTiles
       const neighbors = getNeighbors(tile.row, tile.col, mazeValues[0].length);
-      // For each neighbor
-      for (const neighbor of neighbors) {
-        // If empty tile
-        if (mazeValues[neighbor.row][neighbor.col] === FLOOR_TILE) {
-          allFull = false;
+      const floorNeighbors = neighbors.filter(({ row, col }) => mazeValues[row][col] === FLOOR_TILE);
+      nextTiles.push(...floorNeighbors);
 
-          // Set as lava tile
-          mazeValues[neighbor.row][neighbor.col] = LAVA_TILE;
-          newTiles.push(neighbor);
-          const newLavaTile = new Graphics()
-            .rect(neighbor.col * tileSize, neighbor.row * tileSize, tileSize, tileSize)
-            .fill('red');
-          lavaContainer.addChild(newLavaTile);
-
-          if (checkCollision(player, newLavaTile)) {
-            // Could call ticker.stop() here, but looks cool if the lava keeps going
-            console.error('Game Over!');
-          }
-        }
+      // Check game over
+      if (checkCollision(player, newLavaTile)) {
+        console.error('Game Over!');
       }
     }
-    // Add new lava tiles
-    lavaTiles.push(...newTiles);
-    // Stop ticker if all tiles are covered
-    if (allFull) ticker.stop();
+
+    // Reset lavaTiles
+    lavaTiles = nextTiles;
+    // Stop ticker if all tiles are covered with lava
+    if (nextTiles.length === 0) ticker.stop();
   };
 }
 
-function getNeighbors(tileRow: number, tileCol: number, mazeWidth: number) {
+function getNeighbors(tileRow: number, tileCol: number, mazeWidth: number): Tile[] {
   // Sorted by lowest -> highest priority
   return [
     { row: Math.max(0, tileRow - 1), col: tileCol }, // up
@@ -69,15 +61,16 @@ function getNeighbors(tileRow: number, tileCol: number, mazeWidth: number) {
 }
 
 /*
-Current algorithm: 
-1. Create emtpy array of lava tiles
-2. Add initial lava tile
-3. For each tile in lavaTiles array:
-4.     For each neighboring tile:
-5.         If empty, add tile to lavaTiles array
+Lava Algorithm:
 
-The problem with this is that it would be get slower as it goes on, because it's checking
-all the neighbors of a bunch of already filled lava tiles
+For each tile in lavaTiles:
+  Turn to lava
+  Get neighbors
+  For each neighbor:
+    If floor tile:
+      Add to nextTiles
+lavaTiles = nextTiles
+
 */
 
 /*
@@ -104,7 +97,7 @@ export function lavaTickerFactory(startPosition: { x: number; y: number }, tileS
   let elapsedMS = 0;
 
   // 1. Create stack
-  let stack: { row: number; col: number }[] = [];
+  let stack: Tile [] = [];
   // 2. Add empty start tile to stack
   stack.push({ row: 1, col: 1 });
 
@@ -118,7 +111,7 @@ export function lavaTickerFactory(startPosition: { x: number; y: number }, tileS
     if (stack.length > 0) {
       // 4. Set currTile equal to first element of stack
       // 5. Remove first element from set
-      let currTile = stack.pop() as { row: number; col: number };
+      let currTile = stack.pop() as Tile ;
       // 6. If currTile is empty
       if (mazeValues[currTile.row][currTile.col] === 0) {
         // Set tile to lava tile
