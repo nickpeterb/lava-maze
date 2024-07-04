@@ -3,6 +3,7 @@ import { createMaze } from './src/maze';
 import { canMoveTo } from './src/utils';
 import { lavaContainer, lavaTickerFactory } from './src/lava';
 import { LAVA_START_DELAY, TILE_SIZE } from './src/constants';
+import { PlayerSettings } from './src/types';
 
 async function main() {
   // Init app
@@ -21,6 +22,9 @@ async function main() {
   player.y = startPosition.y;
   player.tint = '#2196F3';
   app.stage.addChild(player);
+  const playerSettings: PlayerSettings = {
+    canMove: true,
+  };
 
   // Create maze
   const [mazeContainer, mazeValues] = createMaze(TILE_SIZE);
@@ -42,7 +46,7 @@ async function main() {
     if (!gameStarted) {
       gameStarted = true;
       setTimeout(() => {
-        app.ticker.add(lavaTickerFactory(startPosition, TILE_SIZE, mazeValues, player));
+        app.ticker.add(lavaTickerFactory(startPosition, TILE_SIZE, mazeValues, player, playerSettings));
       }, LAVA_START_DELAY);
     }
   });
@@ -54,17 +58,19 @@ async function main() {
     let newX = player.x;
     let newY = player.y;
 
-    if (keys['ArrowUp'] || keys['KeyW']) newY -= speed;
-    if (keys['ArrowDown'] || keys['KeyS']) newY += speed;
-    if (keys['ArrowLeft'] || keys['KeyA']) newX -= speed;
-    if (keys['ArrowRight'] || keys['KeyD']) newX += speed;
+    if (playerSettings.canMove) {
+      if (keys['ArrowUp'] || keys['KeyW']) newY -= speed;
+      if (keys['ArrowDown'] || keys['KeyS']) newY += speed;
+      if (keys['ArrowLeft'] || keys['KeyA']) newX -= speed;
+      if (keys['ArrowRight'] || keys['KeyD']) newX += speed;
 
-    // Check if there's actually a need to move
-    if (newX === player.x && newY === player.y) return;
+      // Check if there's actually a need to move
+      if (newX === player.x && newY === player.y) return;
 
-    // Attempt horizontal movement first, then vertical movement
-    if (canMoveTo(newX, player.y, player, mazeContainer)) player.x = newX;
-    if (canMoveTo(player.x, newY, player, mazeContainer)) player.y = newY;
+      // Attempt horizontal movement first, then vertical movement
+      if (canMoveTo(newX, player.y, player, mazeContainer)) player.x = newX;
+      if (canMoveTo(player.x, newY, player, mazeContainer)) player.y = newY;
+    }
   });
 }
 

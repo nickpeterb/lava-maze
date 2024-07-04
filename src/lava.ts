@@ -1,15 +1,17 @@
 import { Container, Graphics, Sprite, Ticker } from 'pixi.js';
 import { checkCollision } from './utils';
 import { FLOOR_TILE, LAVA_SPEED, LAVA_TILE } from './constants';
-
-interface Tile {
-  row: number;
-  col: number;
-}
+import { PlayerSettings, Tile } from './types';
 
 export const lavaContainer = new Container();
 
-export function lavaTickerFactory(startIndexes: Tile, tileSize: number, mazeValues: number[][], player: Sprite) {
+export function lavaTickerFactory(
+  startIndexes: Tile,
+  tileSize: number,
+  mazeValues: number[][],
+  player: Sprite,
+  playerSettings: PlayerSettings
+) {
   mazeValues = JSON.parse(JSON.stringify(mazeValues));
 
   const waitTimeMS = LAVA_SPEED;
@@ -40,6 +42,7 @@ export function lavaTickerFactory(startIndexes: Tile, tileSize: number, mazeValu
       // Check game over
       if (checkCollision(player, newLavaTile)) {
         console.error('Game Over!');
+        playerSettings.canMove = false;
       }
     }
 
