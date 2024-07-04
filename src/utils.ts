@@ -1,5 +1,6 @@
 import { Container, Graphics, Rectangle, Sprite } from 'pixi.js';
 import { TILE_SIZE } from './constants';
+import { Tile } from './types';
 
 /** Checks for potential collisions with maze walls */
 export function canMoveTo(newX: number, newY: number, player: Sprite, maze: Container) {
@@ -25,6 +26,17 @@ export function checkCollision(r1, r2) {
   );
 }
 
+/** Creates a Pixi.js Graphics object for a maze tile */
 export function createTile(row: number, col: number, color: string) {
   return new Graphics().rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE).fill(color);
+}
+
+/** Return all the neighbors of a given maze tile */
+export function getTileNeighbors(tileRow: number, tileCol: number, mazeWidth: number): Tile[] {
+  return [
+    { row: Math.max(0, tileRow - 1), col: tileCol }, // up
+    { row: Math.min(mazeWidth, tileRow + 1), col: tileCol }, // down
+    { row: tileRow, col: Math.max(0, tileCol - 1) }, // left
+    { row: tileRow, col: Math.min(mazeWidth, tileCol + 1) }, // right
+  ];
 }

@@ -1,12 +1,12 @@
-import { Container, Graphics, Sprite, Ticker } from 'pixi.js';
-import { checkCollision, createTile } from './utils';
+import { Container, Sprite, Ticker } from 'pixi.js';
+import { checkCollision, createTile, getTileNeighbors } from './utils';
 import { FLOOR_TILE, LAVA_SPEED_DELAY, LAVA_TILE } from './constants';
 import { PlayerSettings, Tile } from './types';
 
 export const lavaContainer = new Container();
 
 export function lavaTickerFactory(
-  startIndexes: Tile,
+  startPosition: Tile,
   mazeValues: number[][],
   player: Sprite,
   playerSettings: PlayerSettings
@@ -15,7 +15,7 @@ export function lavaTickerFactory(
   let elapsedMS = 0;
 
   // Array of upcoming lava tiles
-  let lavaTiles: Tile[] = [{ ...startIndexes }];
+  let lavaTiles: Tile[] = [{ ...startPosition }];
 
   return function lavaTicker(ticker: Ticker) {
     // Delay execution
@@ -32,7 +32,7 @@ export function lavaTickerFactory(
       lavaContainer.addChild(newLavaTile);
 
       // Add to next round of lavaTiles
-      const neighbors = getNeighbors(tile.row, tile.col, mazeValues[0].length);
+      const neighbors = getTileNeighbors(tile.row, tile.col, mazeValues[0].length);
       const floorNeighbors = neighbors.filter(({ row, col }) => mazeValues[row][col] === FLOOR_TILE);
       nextTiles.push(...floorNeighbors);
 
@@ -48,16 +48,6 @@ export function lavaTickerFactory(
     // Stop ticker if all tiles are covered with lava
     if (nextTiles.length === 0) ticker.stop();
   };
-}
-
-function getNeighbors(tileRow: number, tileCol: number, mazeWidth: number): Tile[] {
-  // Sorted by lowest -> highest priority
-  return [
-    { row: Math.max(0, tileRow - 1), col: tileCol }, // up
-    { row: Math.min(mazeWidth, tileRow + 1), col: tileCol }, // down
-    { row: tileRow, col: Math.max(0, tileCol - 1) }, // left
-    { row: tileRow, col: Math.min(mazeWidth, tileCol + 1) }, // right
-  ];
 }
 
 /*

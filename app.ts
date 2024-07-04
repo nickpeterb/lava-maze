@@ -32,7 +32,7 @@ async function main() {
   app.stage.addChild(mazeContainer);
 
   // Create goal tile
-  const goal = getGoalTilePosition(mazeValues);
+  const goal = getGoalTilePosition(mazeValues, startPosition);
   // mazeValues[goal.row][goal.col] = GOAL_TILE; // if this is needed, change logic in lava alg. to be if tile is floor or goal
   const goalTile = createTile(goal.row, goal.col, 'green');
   app.stage.addChild(goalTile);
