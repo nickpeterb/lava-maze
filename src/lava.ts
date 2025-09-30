@@ -1,16 +1,12 @@
 import { Container, Sprite, Ticker } from 'pixi.js';
 import { checkCollision, createTile, getTileNeighbors } from './utils';
 import { FLOOR_TILE, LAVA_SPEED_DELAY, LAVA_TILE } from './constants';
-import { PlayerSettings, Tile } from './types';
+import { Tile } from './types';
+import { GameInfo } from './globals';
 
 export const lavaContainer = new Container();
 
-export function lavaTickerFactory(
-  startPosition: Tile,
-  mazeValues: number[][],
-  player: Sprite,
-  playerSettings: PlayerSettings
-) {
+export function lavaTickerFactory(startPosition: Tile, mazeValues: number[][], player: Sprite) {
   mazeValues = JSON.parse(JSON.stringify(mazeValues));
   let elapsedMS = 0;
 
@@ -37,9 +33,8 @@ export function lavaTickerFactory(
       nextTiles.push(...floorNeighbors);
 
       // Check game over
-      if (checkCollision(player, newLavaTile)) {
-        console.error('Game Over!');
-        playerSettings.canMove = false;
+      if (GameInfo.state === 'PLAYING' && checkCollision(player, newLavaTile)) {
+        GameInfo.state = 'LOST';
       }
     }
 

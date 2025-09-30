@@ -1,12 +1,14 @@
 import { Application, Sprite, Texture } from 'pixi.js';
 import { createMaze } from './src/maze';
-import { canMoveTo, checkCollision, createTile } from './src/utils';
+import { canMoveTo, checkCover, createTile } from './src/utils';
 import { lavaContainer, lavaTickerFactory } from './src/lava';
-import { GOAL_TILE, LAVA_START_DELAY, TILE_SIZE } from './src/constants';
-import { PlayerSettings } from './src/types';
+import { LAVA_START_DELAY, TILE_SIZE } from './src/constants';
 import { getGoalTilePosition } from './src/goal';
+import { GameInfo, isGameDone } from './src/globals';
 
 async function main() {
+  GameInfo.state = 'LOADING';
+
   // Init app
   const app = new Application();
   await app.init({ background: 'lightgrey', height: window.innerHeight - 5, width: window.innerWidth - 5 });
@@ -21,11 +23,9 @@ async function main() {
   player.height = TILE_SIZE;
   player.x = startPosition.x;
   player.y = startPosition.y;
+  player.zIndex = 10;
   player.tint = '#2196F3';
   app.stage.addChild(player);
-  const playerSettings: PlayerSettings = {
-    canMove: true,
-  };
 
   // Create maze
   const [mazeContainer, mazeValues] = createMaze(TILE_SIZE);
@@ -41,40 +41,49 @@ async function main() {
   app.stage.addChild(lavaContainer);
 
   // Create an object to store the state of arrow keys
-  const keys = {};
-
-  let gameStarted = false;
+  const keys: any = {};
 
   // Add event listeners for keydown and keyup events
   window.addEventListener('keydown', (e) => {
     keys[e.code] = true;
 
     // Start lava
-    if (!gameStarted) {
-      gameStarted = true;
+    if (!isGameDone()) {
+      GameInfo.state = 'PLAYING';
+
       setTimeout(() => {
-        app.ticker.add(lavaTickerFactory(startPosition, mazeValues, player, playerSettings));
+        app.ticker.add(lavaTickerFactory(startPosition, mazeValues, player));
       }, LAVA_START_DELAY);
     }
   });
   window.addEventListener('keyup', (e) => (keys[e.code] = false));
 
+  const speed = 1; // pixels
+  const expectedFrameTime = 1000 / 120; // Ideal 120 fps
+
   // Create game loop
   app.ticker.add((ticker) => {
-    const speed = 1;
+    let scalingFactor = ticker.deltaMS / expectedFrameTime;
+    const playerSpeed = Math.round(speed * scalingFactor);
+
     let newX = player.x;
     let newY = player.y;
 
-    if (checkCollision(player, goalTile)) {
-      ticker.stop();
-      console.warn('You win!');
+    // Losing state is set in lava.ts
+    if (GameInfo.state === 'LOST') {
+      player.tint = '#454545ff'; // Player gets burnt
     }
 
-    if (playerSettings.canMove) {
-      if (keys['ArrowUp'] || keys['KeyW']) newY -= speed;
-      if (keys['ArrowDown'] || keys['KeyS']) newY += speed;
-      if (keys['ArrowLeft'] || keys['KeyA']) newX -= speed;
-      if (keys['ArrowRight'] || keys['KeyD']) newX += speed;
+    if (GameInfo.state === 'PLAYING' && checkCover(player, goalTile)) {
+      GameInfo.state = 'WON';
+      player.zIndex = -10; // Players gets "teleported"
+    }
+
+    if (GameInfo.state === 'PLAYING') {
+      if (keys['ArrowUp'] || keys['KeyW']) newY -= playerSpeed;
+      if (keys['ArrowDown'] || keys['KeyS']) newY += playerSpeed;
+      if (keys['ArrowLeft'] || keys['KeyA']) newX -= playerSpeed;
+      if (keys['ArrowRight'] || keys['KeyD']) newX += playerSpeed;
 
       // Check if there's actually a need to move
       if (newX === player.x && newY === player.y) return;
@@ -84,6 +93,8 @@ async function main() {
       if (canMoveTo(player.x, newY, player, mazeContainer)) player.y = newY;
     }
   });
+
+  GameInfo.state = 'LOADED';
 }
 
 window.onload = function () {

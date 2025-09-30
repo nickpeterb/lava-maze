@@ -3,6 +3,8 @@ export interface Tile {
   col: number;
 }
 
-export interface PlayerSettings {
-  canMove: boolean;
+export type GameStateType = 'LOADING' | 'LOADED' | 'PLAYING' | 'WON' | 'LOST';
+
+export interface GameInfoType {
+  state: GameStateType;
 }

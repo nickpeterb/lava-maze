@@ -26,6 +26,19 @@ export function checkCollision(r1, r2) {
   );
 }
 
+/** Checks if two regtangles cover one another */
+export function checkCover(r1, r2) {
+  const bounds1 = r1.getBounds();
+  const bounds2 = r2.getBounds();
+
+  return (
+    bounds2.x >= bounds1.x &&
+    bounds2.y >= bounds1.y &&
+    bounds2.x + bounds2.width <= bounds1.x + bounds1.width &&
+    bounds2.y + bounds2.height <= bounds1.y + bounds1.height
+  );
+}
+
 /** Creates a Pixi.js Graphics object for a maze tile */
 export function createTile(row: number, col: number, color: string) {
   return new Graphics().rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE).fill(color);
