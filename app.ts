@@ -2,18 +2,18 @@ import { Application, Sprite, Texture } from 'pixi.js';
 import { createMaze } from './src/maze';
 import { canMoveTo, checkCover, createTile } from './src/utils';
 import { lavaContainer, lavaTickerFactory } from './src/lava';
-import { LAVA_START_DELAY, TILE_SIZE } from './src/constants';
+import { LAVA_START_DELAY, MAZE_SIZE, TILE_SIZE } from './src/constants';
 import { getGoalTilePosition } from './src/goal';
 import { GameInfo, isGameDone } from './src/globals';
 
 async function main() {
   GameInfo.state = 'LOADING';
+  const CANVAS_SIZE = MAZE_SIZE * TILE_SIZE;
 
   // Init app
   const app = new Application();
-  await app.init({ background: 'lightgrey', height: window.innerHeight - 5, width: window.innerWidth - 5 });
-  document.body.innerHTML = '';
-  document.body.appendChild(app.canvas);
+  await app.init({ background: 'lightgrey', height: CANVAS_SIZE, width: CANVAS_SIZE });
+  document.getElementById('canvas-container')?.appendChild(app.canvas);
 
   const startPosition = { row: 1, col: 1, x: TILE_SIZE, y: TILE_SIZE } as const;
 
@@ -75,6 +75,7 @@ async function main() {
     }
 
     if (GameInfo.state === 'PLAYING' && checkCover(player, goalTile)) {
+      alert('YOU ESCAPED!')
       GameInfo.state = 'WON';
       player.zIndex = -10; // Players gets "teleported"
     }

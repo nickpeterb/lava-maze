@@ -1,15 +1,43 @@
 <!DOCTYPE html>
 <html>
   <title>Lava Maze</title>
-  <head></head>
+
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  </head>
   <style>
     html,
     body {
       margin: 0;
       padding: 0;
     }
+
+    body {
+      padding: 25px;
+      background-color: #212121;
+      font-family: 'Press Start 2P', system-ui;
+      color: whitesmoke;
+      text-align: center;
+    }
+
+    #canvas-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
   </style>
+
   <body>
+    <h1>Lava Maze</h1>
+    <div style="font-size: 12px;">
+      <p>Get to the goal tile before the lava catches up to you!</p>
+      <p>Use arrow keys or WASD to move</p>
+      <p>Totally random maze generated on each refresh</p>
+    </div>
+    <div id="canvas-container"></div>
     <script type="module" src="./app.ts"></script>
   </body>
 </html>
